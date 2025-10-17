@@ -1,11 +1,11 @@
 {
-	"id": "sample-plugin",
-	"name": "Sample Plugin",
-	"version": "1.0.0",
-	"minAppVersion": "0.15.0",
-	"description": "Demonstrates some of the capabilities of the Obsidian API.",
-	"author": "Obsidian",
-	"authorUrl": "https://obsidian.md",
-	"fundingUrl": "https://obsidian.md/pricing",
-	"isDesktopOnly": false
+	"id": "simons-obsidian-plugin",
+	"name": "Simon's Obsidian Plugin",
+	"version": "0.0.1",
+	"minAppVersion": "0.19.0",
+	"description": "My personal collection of things that are hopefully nifty",
+	"author": "Simon Zeng",
+	"authorUrl": "https://simonzeng.com",
+	"fundingUrl": "https://simonzeng.com",
+	"isDesktopOnly": true
 }

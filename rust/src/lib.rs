@@ -1,11 +1,13 @@
 use wasm_bindgen::prelude::*;
 
 // Module declarations
+mod error;
 mod settings;
 mod commands;
 mod utils;
 
 // Re-export all public functions from modules
+pub use error::*;
 pub use settings::*;
 pub use commands::*;
 pub use utils::*;

@@ -1,5 +1,6 @@
 use serde::{Deserialize, Serialize};
 use wasm_bindgen::prelude::*;
+use crate::error::PluginError;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct PluginSettings {
@@ -15,28 +16,57 @@ impl Default for PluginSettings {
     }
 }
 
+/// Internal validation function with proper error types
+pub fn validate_setting_internal(key: &str, value: &str) -> Result<(), PluginError> {
+    match key {
+        "mySetting" => {
+            if value.is_empty() {
+                return Err(PluginError::ValidationError {
+                    field: key.to_string(),
+                    value: value.to_string(),
+                    reason: "Setting value cannot be empty".to_string(),
+                });
+            }
+            Ok(())
+        }
+        _ => Err(PluginError::UnknownSetting {
+            key: key.to_string(),
+        }),
+    }
+}
+
+/// Internal serialization function with proper error handling
+pub fn serialize_settings(settings: &PluginSettings) -> Result<String, PluginError> {
+    serde_json::to_string(settings).map_err(|e| PluginError::SerializationError {
+        context: "serialize_settings".to_string(),
+        source: e.to_string(),
+    })
+}
+
+/// Internal deserialization function with proper error handling
+pub fn deserialize_settings(json: &str) -> Result<PluginSettings, PluginError> {
+    serde_json::from_str(json).map_err(|e| PluginError::SerializationError {
+        context: "deserialize_settings".to_string(),
+        source: e.to_string(),
+    })
+}
+
+// WASM boundary functions - these convert between Result<T, PluginError> and JsValue
+
 #[wasm_bindgen]
 pub fn get_default_settings() -> String {
     let settings = PluginSettings::default();
-    serde_json::to_string(&settings).unwrap_or_else(|_| "{}".to_string())
+    serialize_settings(&settings).unwrap_or_else(|_| "{}".to_string())
 }
 
 #[wasm_bindgen]
 pub fn validate_setting(key: &str, value: &str) -> Result<(), JsValue> {
-    match key {
-        "mySetting" => {
-            if value.is_empty() {
-                return Err(JsValue::from_str("Setting cannot be empty"));
-            }
-            Ok(())
-        }
-        _ => Err(JsValue::from_str(&format!("Unknown setting key: {}", key))),
-    }
+    validate_setting_internal(key, value).map_err(|e| e.into())
 }
 
 #[wasm_bindgen]
 pub fn merge_settings(defaults: &str, loaded: &str) -> String {
-    let default_settings: PluginSettings = serde_json::from_str(defaults)
+    let default_settings: PluginSettings = deserialize_settings(defaults)
         .unwrap_or_else(|_| PluginSettings::default());
 
     let mut merged = default_settings.clone();
@@ -49,5 +79,5 @@ pub fn merge_settings(defaults: &str, loaded: &str) -> String {
         }
     }
 
-    serde_json::to_string(&merged).unwrap_or_else(|_| defaults.to_string())
+    serialize_settings(&merged).unwrap_or_else(|_| defaults.to_string())
 }

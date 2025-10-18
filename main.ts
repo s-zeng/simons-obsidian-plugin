@@ -8,7 +8,20 @@ import {
 	PluginSettingTab,
 	Setting,
 } from "obsidian";
-import init, { greet, add, fibonacci } from "./pkg/rust";
+import init, {
+	// Settings functions
+	get_default_settings,
+	merge_settings,
+	validate_setting,
+	// Command functions
+	process_editor_text,
+	generate_demo_message,
+	// Utility functions
+	add,
+	word_count,
+	reverse_string,
+	to_title_case,
+} from "./pkg/rust";
 // @ts-expect-error - esbuild will bundle this as binary data
 import wasmData from "./pkg/rust_bg.wasm";
 
@@ -18,6 +31,7 @@ interface HelloWorldPluginSettings {
 	mySetting: string;
 }
 
+// Default settings at module scope (Rust manages these at runtime in loadSettings)
 const DEFAULT_SETTINGS: HelloWorldPluginSettings = {
 	mySetting: "default",
 };
@@ -26,10 +40,11 @@ export default class HelloWorldPlugin extends Plugin {
 	settings: HelloWorldPluginSettings;
 
 	async onload() {
-		await this.loadSettings();
-
-		// Initialize WebAssembly module
+		// Initialize WebAssembly module FIRST (before calling any Rust functions)
 		await init(wasmData);
+
+		// Now we can load settings using Rust functions
+		await this.loadSettings();
 
 		// This creates an icon in the left ribbon.
 		const ribbonIconEl = this.addRibbonIcon(
@@ -60,8 +75,11 @@ export default class HelloWorldPlugin extends Plugin {
 			id: "sample-editor-command",
 			name: "Sample editor command",
 			editorCallback: (editor: Editor, _view: MarkdownView) => {
-				console.log(editor.getSelection());
-				editor.replaceSelection("Sample Editor Command");
+				const selection = editor.getSelection();
+				console.log(selection);
+				// Process text in Rust
+				const processed = process_editor_text(selection);
+				editor.replaceSelection(processed);
 			},
 		});
 		// This adds a complex command that can check whether the current state of the app allows execution of the command
@@ -103,17 +121,45 @@ export default class HelloWorldPlugin extends Plugin {
 			new Notice("Hello, world!");
 		});
 
-		// Demo command using Rust/WebAssembly
+		// Demo command using Rust/WebAssembly - all logic in Rust
 		this.addCommand({
 			id: "rust-wasm-demo",
 			name: "Rust WASM Demo",
 			callback: () => {
-				const greeting = greet("Obsidian");
-				const sum = add(5, 7);
-				const fib = fibonacci(10);
-				new Notice(
-					`${greeting}\nSum: ${sum}\nFibonacci(10): ${fib}`,
-				);
+				// All logic in Rust - direct string generation, no JSON round-trip
+				const message = generate_demo_message("Obsidian", 5, 7, 10);
+				new Notice(message);
+			},
+		});
+
+		// Text utility commands powered by Rust
+		this.addCommand({
+			id: "reverse-selection",
+			name: "Reverse selected text",
+			editorCallback: (editor: Editor) => {
+				const selection = editor.getSelection();
+				const reversed = reverse_string(selection);
+				editor.replaceSelection(reversed);
+			},
+		});
+
+		this.addCommand({
+			id: "title-case-selection",
+			name: "Title case selected text",
+			editorCallback: (editor: Editor) => {
+				const selection = editor.getSelection();
+				const titled = to_title_case(selection);
+				editor.replaceSelection(titled);
+			},
+		});
+
+		this.addCommand({
+			id: "word-count",
+			name: "Count words in selection",
+			editorCallback: (editor: Editor) => {
+				const selection = editor.getSelection();
+				const count = word_count(selection);
+				new Notice(`Word count: ${count}`);
 			},
 		});
 	}
@@ -121,11 +167,12 @@ export default class HelloWorldPlugin extends Plugin {
 	onunload() {}
 
 	async loadSettings() {
-		this.settings = Object.assign(
-			{},
-			DEFAULT_SETTINGS,
-			await this.loadData(),
-		);
+		// Use Rust to merge default and loaded settings
+		const loadedData = await this.loadData();
+		const defaultsJson = get_default_settings();
+		const loadedJson = loadedData ? JSON.stringify(loadedData) : "{}";
+		const mergedJson = merge_settings(defaultsJson, loadedJson);
+		this.settings = JSON.parse(mergedJson);
 	}
 
 	async saveSettings() {

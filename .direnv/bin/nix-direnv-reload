@@ -1,19 +1,19 @@
 #!/usr/bin/env bash
 set -e
-if [[ ! -d "/Users/simonzeng/Documents/Simon's vault/.obsidian/plugins/simons-obsidian-plugin" ]]; then
+if [[ ! -d "/Users/simonzeng/repos/simons-obsidian-plugin" ]]; then
   echo "Cannot find source directory; Did you move it?"
-  echo "(Looking for "/Users/simonzeng/Documents/Simon's vault/.obsidian/plugins/simons-obsidian-plugin")"
+  echo "(Looking for "/Users/simonzeng/repos/simons-obsidian-plugin")"
   echo 'Cannot force reload with this script - use "direnv reload" manually and then try again'
   exit 1
 fi
 
 # rebuild the cache forcefully
-_nix_direnv_force_reload=1 direnv exec "/Users/simonzeng/Documents/Simon's vault/.obsidian/plugins/simons-obsidian-plugin" true
+_nix_direnv_force_reload=1 direnv exec "/Users/simonzeng/repos/simons-obsidian-plugin" true
 
 # Update the mtime for .envrc.
 # This will cause direnv to reload again - but without re-building.
-touch "/Users/simonzeng/Documents/Simon's vault/.obsidian/plugins/simons-obsidian-plugin/.envrc"
+touch "/Users/simonzeng/repos/simons-obsidian-plugin/.envrc"
 
 # Also update the timestamp of whatever profile_rc we have.
 # This makes sure that we know we are up to date.
-touch -r "/Users/simonzeng/Documents/Simon's vault/.obsidian/plugins/simons-obsidian-plugin/.envrc" "/Users/simonzeng/Documents/Simon's vault/.obsidian/plugins/simons-obsidian-plugin/.direnv"/*.rc
+touch -r "/Users/simonzeng/repos/simons-obsidian-plugin/.envrc" "/Users/simonzeng/repos/simons-obsidian-plugin/.direnv"/*.rc

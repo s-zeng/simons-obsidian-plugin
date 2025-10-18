@@ -33,8 +33,11 @@ const buildOptions = {
 		...builtins,
 	],
 	format: "cjs",
-	target: "es2018",
+	target: "es2020",
 	logLevel: "info",
+	logOverride: {
+		"empty-import-meta": "silent",
+	},
 	sourcemap: prod ? false : "inline",
 	treeShaking: true,
 	outfile: "main.js",

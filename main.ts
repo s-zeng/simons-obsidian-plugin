@@ -1,28 +1,17 @@
-import {
-	App,
-	Editor,
-	MarkdownView,
-	Modal,
-	Notice,
-	Plugin,
-	PluginSettingTab,
-	Setting,
-} from "obsidian";
+import type { App, Editor } from "obsidian";
+import { MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting } from "obsidian";
 import init, {
 	// Settings functions
 	get_default_settings,
 	merge_settings,
-	validate_setting,
 	// Command functions
 	process_editor_text,
 	generate_demo_message,
 	// Utility functions
-	add,
 	word_count,
 	reverse_string,
 	to_title_case,
 } from "./pkg/rust";
-// @ts-expect-error - esbuild will bundle this as binary data
 import wasmData from "./pkg/rust_bg.wasm";
 
 // Remember to rename these classes and interfaces!
@@ -31,15 +20,10 @@ interface HelloWorldPluginSettings {
 	mySetting: string;
 }
 
-// Default settings at module scope (Rust manages these at runtime in loadSettings)
-const DEFAULT_SETTINGS: HelloWorldPluginSettings = {
-	mySetting: "default",
-};
-
 export default class HelloWorldPlugin extends Plugin {
-	settings: HelloWorldPluginSettings;
+	settings!: HelloWorldPluginSettings;
 
-	async onload() {
+	override async onload(): Promise<void> {
 		// Initialize WebAssembly module FIRST (before calling any Rust functions)
 		await init(wasmData);
 
@@ -47,14 +31,10 @@ export default class HelloWorldPlugin extends Plugin {
 		await this.loadSettings();
 
 		// This creates an icon in the left ribbon.
-		const ribbonIconEl = this.addRibbonIcon(
-			"dice",
-			"Sample Plugin",
-			(_evt: MouseEvent) => {
-				// Called when the user clicks the icon.
-				new Notice("This is a notice!");
-			},
-		);
+		const ribbonIconEl = this.addRibbonIcon("dice", "Sample Plugin", (_evt: MouseEvent) => {
+			// Called when the user clicks the icon.
+			new Notice("This is a notice!");
+		});
 		// Perform additional things with the ribbon
 		ribbonIconEl.addClass("my-plugin-ribbon-class");
 
@@ -74,7 +54,7 @@ export default class HelloWorldPlugin extends Plugin {
 		this.addCommand({
 			id: "sample-editor-command",
 			name: "Sample editor command",
-			editorCallback: (editor: Editor, _view: MarkdownView) => {
+			editorCallback: (editor: Editor) => {
 				const selection = editor.getSelection();
 				console.log(selection);
 				// Process text in Rust
@@ -86,10 +66,9 @@ export default class HelloWorldPlugin extends Plugin {
 		this.addCommand({
 			id: "open-sample-modal-complex",
 			name: "Open sample modal (complex)",
-			checkCallback: (checking: boolean) => {
+			checkCallback: (checking: boolean): boolean => {
 				// Conditions to check
-				const markdownView =
-					this.app.workspace.getActiveViewOfType(MarkdownView);
+				const markdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
 				if (markdownView) {
 					// If checking is true, we're simply "checking" if the command can be run.
 					// If checking is false, then we want to actually perform the operation.
@@ -100,6 +79,7 @@ export default class HelloWorldPlugin extends Plugin {
 					// This command will only show up in Command Palette when the check function returns true
 					return true;
 				}
+				return false;
 			},
 		});
 
@@ -113,9 +93,7 @@ export default class HelloWorldPlugin extends Plugin {
 		});
 
 		// When registering intervals, this function will automatically clear the interval when the plugin is disabled.
-		this.registerInterval(
-			window.setInterval(() => console.log("setInterval"), 5 * 60 * 1000),
-		);
+		this.registerInterval(window.setInterval(() => console.log("setInterval"), 5 * 60 * 1000));
 
 		this.addRibbonIcon("dice", "Greet", () => {
 			new Notice("Hello, world!");
@@ -164,18 +142,20 @@ export default class HelloWorldPlugin extends Plugin {
 		});
 	}
 
-	onunload() {}
+	override onunload(): void {
+		// Cleanup resources if needed
+	}
 
-	async loadSettings() {
+	async loadSettings(): Promise<void> {
 		// Use Rust to merge default and loaded settings
-		const loadedData = await this.loadData();
+		const loadedData = (await this.loadData()) as HelloWorldPluginSettings | null;
 		const defaultsJson = get_default_settings();
 		const loadedJson = loadedData ? JSON.stringify(loadedData) : "{}";
 		const mergedJson = merge_settings(defaultsJson, loadedJson);
-		this.settings = JSON.parse(mergedJson);
+		this.settings = JSON.parse(mergedJson) as HelloWorldPluginSettings;
 	}
 
-	async saveSettings() {
+	async saveSettings(): Promise<void> {
 		await this.saveData(this.settings);
 	}
 }
@@ -185,12 +165,12 @@ class SampleModal extends Modal {
 		super(app);
 	}
 
-	onOpen() {
+	override onOpen(): void {
 		const { contentEl } = this;
 		contentEl.setText("Woah!");
 	}
 
-	onClose() {
+	override onClose(): void {
 		const { contentEl } = this;
 		contentEl.empty();
 	}
@@ -219,7 +199,7 @@ class SampleSettingTab extends PluginSettingTab {
 					.onChange(async (value) => {
 						this.plugin.settings.mySetting = value;
 						await this.plugin.saveSettings();
-					}),
+					})
 			);
 	}
 }

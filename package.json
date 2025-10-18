@@ -7,7 +7,28 @@
 		"build:wasm": "wasm-pack build rust --target web --out-dir ../pkg",
 		"dev": "bun run build:wasm && node esbuild.config.mjs",
 		"build": "bun run build:wasm && tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
-		"version": "node version-bump.mjs && git add manifest.json versions.json"
+		"version": "node version-bump.mjs && git add manifest.json versions.json",
+		"lint": "npm run lint:ts && npm run lint:rust",
+		"lint:ts": "eslint . --ext .ts && prettier --check '**/*.{ts,js,json,md}' && tsc --noEmit",
+		"lint:rust": "cd rust && cargo fmt --check && cargo clippy -- -D warnings",
+		"format": "npm run format:ts && npm run format:rust",
+		"format:ts": "prettier --write '**/*.{ts,js,json,md}' && eslint . --ext .ts --fix",
+		"format:rust": "cd rust && cargo fmt",
+		"prepare": "husky"
+	},
+	"lint-staged": {
+		"*.ts": [
+			"eslint --fix",
+			"prettier --write",
+			"bash -c 'tsc --noEmit'"
+		],
+		"*.{js,json,md}": [
+			"prettier --write"
+		],
+		"rust/src/**/*.rs": [
+			"bash -c 'cd rust && cargo fmt'",
+			"bash -c 'cd rust && cargo clippy --fix --allow-dirty --allow-staged -- -D warnings'"
+		]
 	},
 	"keywords": [],
 	"author": "",
@@ -17,8 +38,11 @@
 		"@typescript-eslint/eslint-plugin": "5.29.0",
 		"@typescript-eslint/parser": "5.29.0",
 		"builtin-modules": "3.3.0",
-		"esbuild": "0.17.3",
+		"esbuild": "^0.25.11",
+		"husky": "^9.1.7",
+		"lint-staged": "^16.2.4",
 		"obsidian": "latest",
+		"prettier": "^3.6.2",
 		"tslib": "2.4.0",
 		"typescript": "4.7.4"
 	}

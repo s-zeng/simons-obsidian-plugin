@@ -1,0 +1,56 @@
+# Rust formatting configuration for maximum strictness
+edition = "2024"
+
+# Indentation and spacing
+max_width = 100
+hard_tabs = false
+tab_spaces = 4
+
+# Imports
+imports_granularity = "Crate"
+group_imports = "StdExternalCrate"
+reorder_imports = true
+
+# Use field init shorthand
+use_field_init_shorthand = true
+
+# Function calls
+use_small_heuristics = "Max"
+
+# Comments and documentation
+wrap_comments = true
+format_code_in_doc_comments = true
+normalize_comments = true
+normalize_doc_attributes = true
+
+# Match arms
+match_arm_blocks = true
+match_block_trailing_comma = true
+
+# Trailing elements
+trailing_comma = "Vertical"
+trailing_semicolon = true
+
+# Misc formatting
+reorder_impl_items = true
+use_try_shorthand = true
+format_strings = true
+format_macro_matchers = true
+format_macro_bodies = true
+
+# Chain formatting
+chain_width = 60
+single_line_if_else_max_width = 50
+
+# Overflow and wrapping
+overflow_delimited_expr = true
+struct_lit_single_line = false
+fn_single_line = false
+where_single_line = false
+
+# Blank lines
+blank_lines_upper_bound = 1
+blank_lines_lower_bound = 0
+
+# Newlines
+newline_style = "Unix"

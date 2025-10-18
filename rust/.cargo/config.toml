@@ -1,0 +1,11 @@
+[build]
+# Enable all warnings by default
+rustflags = ["-Dwarnings"]
+
+[target.'cfg(all())']
+rustflags = [
+    "-W", "clippy::all",
+    "-W", "clippy::pedantic",
+    "-W", "clippy::nursery",
+    "-W", "clippy::cargo",
+]

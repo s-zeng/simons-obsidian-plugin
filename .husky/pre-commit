@@ -1,0 +1,27 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# Run lint-staged for TypeScript/JS files
+bunx lint-staged
+
+# Check for staged Rust files and run linting
+if git diff --cached --name-only | grep -q "^rust/.*\.rs$"; then
+  echo "Checking Rust files..."
+  cd rust || exit 1
+
+  # Run cargo fmt check
+  echo "Running cargo fmt..."
+  cargo fmt --check || {
+    echo "Error: Rust formatting check failed. Run 'npm run format:rust' to fix."
+    exit 1
+  }
+
+  # Run cargo clippy
+  echo "Running cargo clippy..."
+  cargo clippy -- -D warnings || {
+    echo "Error: Clippy found issues. Please fix them before committing."
+    exit 1
+  }
+
+  cd ..
+fi

@@ -10,6 +10,7 @@ The plugin is designed to provide machine learning and statistical analysis tool
 with the heavy computational work handled by Rust code compiled to WebAssembly.
 
 The architecture follows a clean separation:
+
 - **Rust (rust/src/)**: Core logic, data processing, ML/statistics algorithms, and business logic
 - **TypeScript (main.ts)**: Obsidian API integration, UI components, and plugin lifecycle management
 - **WebAssembly**: Bridge between TypeScript and Rust for near-native performance in the browser
@@ -38,12 +39,14 @@ features or structures
 Based on comprehensive bug audits, follow these critical safety practices:
 
 ### Never Use `unwrap()` in Production Code
+
 - **NEVER** use `.unwrap()` on `Option` or `Result` types in production paths
 - Use proper error handling with `?`, `.ok_or()`, `.map_err()`, or pattern matching
 - Example: Replace `tag_name.chars().nth(1).unwrap()` with proper error handling
 - Exception: Only use `unwrap()` in tests or when preceded by explicit checks that guarantee safety
 
 ### Error Message Quality
+
 - Include contextual information in error messages
 - Use structured error types instead of plain strings where possible
 - Provide actionable information for debugging
@@ -59,6 +62,7 @@ The project will use **snapshot testing** via the `insta` crate for all test ass
 ### Snapshot Testing Approach
 
 All tests follow these principles:
+
 - **Single assertion per test**: Each test has exactly one `insta::assert_snapshot!()` or `insta::assert_json_snapshot!()` call
 - **Deterministic snapshots**: Dynamic data (timestamps, file sizes, temp paths) is normalized to ensure reproducible results
 - **Literal value snapshots**: Snapshots contain only concrete, expected values without variables

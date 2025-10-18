@@ -7,6 +7,8 @@ pkgs.mkShell {
   	cargo
   	wasm-pack
   	lld
+  	rustfmt
+  	clippy
   ];
   packages = with pkgs; [
   ];

@@ -1,8 +1,6 @@
 use rust::{
-    PluginSettings, PluginError,
+    PluginError, PluginSettings, deserialize_settings, serialize_settings,
     validate_setting_internal,
-    serialize_settings,
-    deserialize_settings,
 };
 
 #[test]
@@ -21,7 +19,7 @@ fn test_deserialize_valid_settings() {
 
 #[test]
 fn test_deserialize_invalid_json() {
-    let json = r#"invalid json"#;
+    let json = r"invalid json";
     let result = deserialize_settings(json);
     assert!(result.is_err());
 
@@ -89,9 +87,7 @@ fn test_plugin_error_display_serialization() {
 
 #[test]
 fn test_plugin_error_display_unknown_setting() {
-    let error = PluginError::UnknownSetting {
-        key: "unknownKey".to_string(),
-    };
+    let error = PluginError::UnknownSetting { key: "unknownKey".to_string() };
     let display = error.to_string();
     insta::assert_snapshot!(display, @"Unknown setting key: 'unknownKey'");
 }

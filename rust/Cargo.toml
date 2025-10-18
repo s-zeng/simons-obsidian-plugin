@@ -2,6 +2,12 @@
 name = "rust"
 version = "0.1.0"
 edition = "2024"
+description = "Rust/WebAssembly computation engine for Obsidian plugin"
+license = "MIT"
+repository = "https://github.com/simonzeng/simons-obsidian-plugin"
+readme = "../README.md"
+keywords = ["obsidian", "wasm", "plugin"]
+categories = ["wasm"]
 
 [lib]
 crate-type = ["cdylib", "rlib"]
@@ -17,3 +23,26 @@ insta = "1.40"
 [profile.release]
 opt-level = "s"
 lto = true
+
+[lints.rust]
+unsafe_code = "forbid"
+missing_docs = "warn"
+unused_must_use = "deny"
+
+[lints.clippy]
+# Pedantic lints
+all = { level = "warn", priority = -1 }
+pedantic = { level = "warn", priority = -1 }
+nursery = { level = "warn", priority = -1 }
+
+# Restriction lints for extra safety
+unwrap_used = "warn"
+expect_used = "warn"
+panic = "warn"
+todo = "warn"
+unimplemented = "warn"
+
+# Code quality
+missing_errors_doc = "warn"
+missing_panics_doc = "warn"
+implicit_return = "allow"  # Rust idiom is implicit returns

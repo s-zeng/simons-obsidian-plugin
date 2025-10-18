@@ -1,10 +1,4 @@
-use rust::{
-    reverse_string,
-    word_count,
-    to_title_case,
-    add,
-    multiply,
-};
+use rust::{add, multiply, reverse_string, to_title_case, word_count};
 
 #[test]
 fn test_reverse_string_simple() {

@@ -1,9 +1,4 @@
-use rust::{
-    process_editor_text,
-    generate_greeting,
-    calculate_fibonacci,
-    generate_demo_message,
-};
+use rust::{calculate_fibonacci, generate_demo_message, generate_greeting, process_editor_text};
 
 #[test]
 fn test_process_editor_text_simple() {

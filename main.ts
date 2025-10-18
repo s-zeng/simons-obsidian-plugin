@@ -8,22 +8,28 @@ import {
 	PluginSettingTab,
 	Setting,
 } from "obsidian";
+import init, { greet, add, fibonacci } from "./pkg/rust";
+// @ts-expect-error - esbuild will bundle this as binary data
+import wasmData from "./pkg/rust_bg.wasm";
 
 // Remember to rename these classes and interfaces!
 
-interface MyPluginSettings {
+interface HelloWorldPluginSettings {
 	mySetting: string;
 }
 
-const DEFAULT_SETTINGS: MyPluginSettings = {
+const DEFAULT_SETTINGS: HelloWorldPluginSettings = {
 	mySetting: "default",
 };
 
-export default class MyPlugin extends Plugin {
-	settings: MyPluginSettings;
+export default class HelloWorldPlugin extends Plugin {
+	settings: HelloWorldPluginSettings;
 
 	async onload() {
 		await this.loadSettings();
+
+		// Initialize WebAssembly module
+		await init(wasmData);
 
 		// This creates an icon in the left ribbon.
 		const ribbonIconEl = this.addRibbonIcon(
@@ -92,6 +98,24 @@ export default class MyPlugin extends Plugin {
 		this.registerInterval(
 			window.setInterval(() => console.log("setInterval"), 5 * 60 * 1000),
 		);
+
+		this.addRibbonIcon("dice", "Greet", () => {
+			new Notice("Hello, world!");
+		});
+
+		// Demo command using Rust/WebAssembly
+		this.addCommand({
+			id: "rust-wasm-demo",
+			name: "Rust WASM Demo",
+			callback: () => {
+				const greeting = greet("Obsidian");
+				const sum = add(5, 7);
+				const fib = fibonacci(10);
+				new Notice(
+					`${greeting}\nSum: ${sum}\nFibonacci(10): ${fib}`,
+				);
+			},
+		});
 	}
 
 	onunload() {}
@@ -126,9 +150,9 @@ class SampleModal extends Modal {
 }
 
 class SampleSettingTab extends PluginSettingTab {
-	plugin: MyPlugin;
+	plugin: HelloWorldPlugin;
 
-	constructor(app: App, plugin: MyPlugin) {
+	constructor(app: App, plugin: HelloWorldPlugin) {
 		super(app, plugin);
 		this.plugin = plugin;
 	}

@@ -3,6 +3,10 @@
 pkgs.mkShell {
   buildInputs = with pkgs; [
   	bun
+  	rustc
+  	cargo
+  	wasm-pack
+  	lld
   ];
   packages = with pkgs; [
   ];

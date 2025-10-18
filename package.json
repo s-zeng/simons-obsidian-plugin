@@ -4,8 +4,9 @@
 	"description": "This is a sample plugin for Obsidian (https://obsidian.md)",
 	"main": "main.js",
 	"scripts": {
-		"dev": "node esbuild.config.mjs",
-		"build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
+		"build:wasm": "wasm-pack build rust --target web --out-dir ../pkg",
+		"dev": "bun run build:wasm && node esbuild.config.mjs",
+		"build": "bun run build:wasm && tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
 		"version": "node version-bump.mjs && git add manifest.json versions.json"
 	},
 	"keywords": [],

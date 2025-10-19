@@ -26,6 +26,40 @@ pub enum PluginError {
         /// The unrecognized setting key
         key: String,
     },
+    /// Dimensionality reduction error.
+    DimensionalityReductionError {
+        /// The reduction method that failed
+        method: String,
+        /// Explanation of why it failed
+        reason: String,
+    },
+    /// Invalid vector dimensions.
+    InvalidVectorDimensions {
+        /// Expected dimensionality
+        expected: usize,
+        /// Actual dimensionality received
+        got: usize,
+        /// Index of the problematic vector
+        vector_index: usize,
+    },
+    /// Insufficient data for operation.
+    InsufficientData {
+        /// Required minimum data points
+        required: usize,
+        /// Actual data points provided
+        provided: usize,
+    },
+    /// Invalid link index in adjacency matrix.
+    InvalidLinkIndex {
+        /// Source note index
+        from: usize,
+        /// Target note index
+        to: usize,
+        /// Maximum valid index
+        max: usize,
+    },
+    /// Zero norm vector encountered.
+    ZeroNormVector,
 }
 
 impl fmt::Display for PluginError {
@@ -39,6 +73,24 @@ impl fmt::Display for PluginError {
             },
             Self::UnknownSetting { key } => {
                 write!(f, "Unknown setting key: '{key}'")
+            },
+            Self::DimensionalityReductionError { method, reason } => {
+                write!(f, "Dimensionality reduction failed for method '{method}': {reason}")
+            },
+            Self::InvalidVectorDimensions { expected, got, vector_index } => {
+                write!(
+                    f,
+                    "Invalid vector dimensions at index {vector_index}: expected {expected}, got {got}"
+                )
+            },
+            Self::InsufficientData { required, provided } => {
+                write!(f, "Insufficient data: required {required}, provided {provided}")
+            },
+            Self::InvalidLinkIndex { from, to, max } => {
+                write!(f, "Invalid link index: from={from}, to={to}, max={max}")
+            },
+            Self::ZeroNormVector => {
+                write!(f, "Cannot normalize vector with zero norm")
             },
         }
     }

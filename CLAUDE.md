@@ -34,6 +34,46 @@ This project is in heavy development. Whenever you make a change, make sure to
 check `CLAUDE.md` and update it if necessary to reflect any newly added/changed
 features or structures
 
+## 3D Vector Visualization Architecture
+
+The plugin includes a comprehensive 3D vector visualization system that supports multiple vector sources:
+
+### Architecture Overview
+
+- **Rust Layer (Performance-Critical)**:
+  - `vector_source.rs`: Trait-based abstraction for polymorphic vector sources
+  - `adjacency_matrix.rs`: Sparse adjacency matrix builder for link-graph vectors (M[i][j] = # links i→j)
+  - `dimensionality_reduction.rs`: SVD-based dimensionality reduction using nalgebra
+  - `vector_ops.rs`: Vector normalization, distance computation, and k-means clustering
+
+- **TypeScript Layer (UI & Obsidian Integration)**:
+  - `src/visualization/types.ts`: Core type definitions for vector data and configurations
+  - `src/visualization/providers/`: Provider pattern for extensible vector sources
+    - `VectorSourceProvider.ts`: Base interface
+    - `AdjacencyMatrixProvider.ts`: Link-graph vector provider
+    - `EmbeddingSourceProvider.ts`: Qdrant embedding provider with auto-discovery
+  - `src/visualization/VectorDataManager.ts`: Multi-source data fetching and caching
+  - `src/visualization/VectorVisualizationView.ts`: Three.js-based 3D visualization view
+  - `src/visualization/ColorSchemes.ts`: Color scheme implementations
+
+### Key Features
+
+- **Multi-Source Support**: Qdrant embeddings (auto-discovered) + adjacency matrix (link graphs)
+- **Source Switching**: UI dropdown to switch between vector sources
+- **Graceful Degradation**: Works offline with adjacency matrix even if Qdrant unavailable
+- **Performance**: Rust handles heavy computation (SVD, clustering), TypeScript only for rendering
+- **Caching**: In-memory cache with source-aware keys
+- **Interactive Visualization**: Three.js point cloud with OrbitControls, cluster-based coloring
+
+### Usage
+
+1. Open the vector visualization view via ribbon icon (cube) or command palette
+2. Select a vector source from the dropdown (embedding models or link graph)
+3. Interact with the 3D visualization (rotate, zoom, pan)
+4. Export visualization as PNG
+
+See `vector_plan.md` for detailed architecture documentation
+
 ## Error Handling & Safety Guidelines
 
 Based on comprehensive bug audits, follow these critical safety practices:

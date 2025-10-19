@@ -13,6 +13,10 @@ import init, {
 	to_title_case,
 } from "./pkg/rust";
 import wasmData from "./pkg/rust_bg.wasm";
+import {
+	VectorVisualizationView,
+	VECTOR_VIEW_TYPE,
+} from "./src/visualization/VectorVisualizationView";
 
 // Remember to rename these classes and interfaces!
 
@@ -29,6 +33,9 @@ export default class HelloWorldPlugin extends Plugin {
 
 		// Now we can load settings using Rust functions
 		await this.loadSettings();
+
+		// Register the 3D vector visualization view
+		this.registerView(VECTOR_VIEW_TYPE, (leaf) => new VectorVisualizationView(leaf, this));
 
 		// This creates an icon in the left ribbon.
 		const ribbonIconEl = this.addRibbonIcon("dice", "Sample Plugin", (_evt: MouseEvent) => {
@@ -140,6 +147,41 @@ export default class HelloWorldPlugin extends Plugin {
 				new Notice(`Word count: ${count}`);
 			},
 		});
+
+		// Add ribbon icon for 3D vector visualization
+		this.addRibbonIcon("cube", "Open Vector Visualization", () => {
+			void this.activateVectorView();
+		});
+
+		// Add command for 3D vector visualization
+		this.addCommand({
+			id: "open-vector-visualization",
+			name: "Open 3D Vector Visualization",
+			callback: () => {
+				void this.activateVectorView();
+			},
+		});
+	}
+
+	async activateVectorView(): Promise<void> {
+		const { workspace } = this.app;
+
+		let leaf = workspace.getLeavesOfType(VECTOR_VIEW_TYPE)[0];
+
+		if (!leaf) {
+			const rightLeaf = workspace.getRightLeaf(false);
+			if (rightLeaf) {
+				await rightLeaf.setViewState({
+					type: VECTOR_VIEW_TYPE,
+					active: true,
+				});
+			}
+			leaf = workspace.getLeavesOfType(VECTOR_VIEW_TYPE)[0];
+		}
+
+		if (leaf) {
+			await workspace.revealLeaf(leaf);
+		}
 	}
 
 	override onunload(): void {

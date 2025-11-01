@@ -30,6 +30,12 @@ export class VectorVisualizationView extends ItemView {
 	private availableSources: VectorSourceConfig[] = [];
 	private pointCloud: THREE.Points | null = null;
 
+	// Raycasting
+	private raycaster!: THREE.Raycaster;
+	private mouse: THREE.Vector2 = new THREE.Vector2();
+	private mouseMoveHandler: ((event: MouseEvent) => void) | null = null;
+	private mouseOutHandler: ((event: MouseEvent) => void) | null = null;
+
 	constructor(leaf: WorkspaceLeaf, _plugin: HelloWorldPlugin) {
 		super(leaf);
 		this.dataManager = new VectorDataManager(_plugin);
@@ -269,7 +275,52 @@ export class VectorVisualizationView extends ItemView {
 	}
 
 	private setupEventListeners(): void {
-		// TODO: Add click detection for point selection
+		// Initialize raycaster with threshold for point detection
+		this.raycaster = new THREE.Raycaster();
+		this.raycaster.params.Points = { threshold: 0.05 };
+
+		// Mouse move handler for raycasting
+		this.mouseMoveHandler = (event: MouseEvent): void => {
+			if (!this.renderer?.domElement || !this.pointCloud) {
+				return;
+			}
+
+			// Convert screen coordinates to NDC (Normalized Device Coordinates)
+			const canvas = this.renderer.domElement;
+			const rect = canvas.getBoundingClientRect();
+			this.mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+			this.mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+			// Update raycaster with camera and mouse position
+			this.raycaster.setFromCamera(this.mouse, this.camera);
+
+			// Check for intersections with point cloud
+			const intersects = this.raycaster.intersectObject(this.pointCloud);
+
+			if (intersects.length > 0 && intersects[0]?.index !== undefined) {
+				// Extract note data from intersected point
+				const pointIndex = intersects[0].index;
+				const noteData = this.vectorData[pointIndex];
+
+				if (noteData) {
+					console.log("[VectorVisualizationView] Hovering over:", noteData.label);
+					// TODO: Show tooltip with note data (Task 3)
+				}
+			} else {
+				// TODO: Hide tooltip when no intersection (Task 3)
+			}
+		};
+
+		// Mouse out handler to hide tooltip when leaving canvas
+		this.mouseOutHandler = (): void => {
+			// TODO: Hide tooltip (Task 3)
+		};
+
+		// Attach event listeners to canvas
+		if (this.renderer?.domElement) {
+			this.renderer.domElement.addEventListener("mousemove", this.mouseMoveHandler);
+			this.renderer.domElement.addEventListener("mouseout", this.mouseOutHandler);
+		}
 	}
 
 	private renderPoints(): void {
@@ -398,6 +449,18 @@ export class VectorVisualizationView extends ItemView {
 	}
 
 	override onClose(): Promise<void> {
+		// Clean up event listeners
+		if (this.renderer?.domElement) {
+			if (this.mouseMoveHandler) {
+				this.renderer.domElement.removeEventListener("mousemove", this.mouseMoveHandler);
+				this.mouseMoveHandler = null;
+			}
+			if (this.mouseOutHandler) {
+				this.renderer.domElement.removeEventListener("mouseout", this.mouseOutHandler);
+				this.mouseOutHandler = null;
+			}
+		}
+
 		// Cleanup Three.js resources
 		if (this.renderer) {
 			this.renderer.dispose();

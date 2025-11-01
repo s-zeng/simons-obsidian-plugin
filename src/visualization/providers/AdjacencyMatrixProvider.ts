@@ -1,12 +1,18 @@
 import type { TFile } from "obsidian";
 import type { VectorSourceProvider } from "./VectorSourceProvider";
-import type { VectorSourceConfig, VectorDataPoint } from "../types";
-import { build_adjacency_matrix } from "../../../pkg/rust";
+import type { VectorSourceConfig, VectorDataPoint, AdjacencySourceConfig } from "../types";
+import { build_adjacency_matrix, build_laplacian_matrix } from "../../../pkg/rust";
 import type HelloWorldPlugin from "../../../main";
 
 interface NoteLink {
 	fromId: number;
 	toId: number;
+}
+
+function isAdjacencySourceConfig(
+	config: VectorSourceConfig["config"]
+): config is AdjacencySourceConfig {
+	return "graphType" in config;
 }
 
 export class AdjacencyMatrixProvider implements VectorSourceProvider {
@@ -36,8 +42,14 @@ export class AdjacencyMatrixProvider implements VectorSourceProvider {
 			}
 		}
 
-		// Build adjacency matrix using Rust/WASM
-		const vectorsJson = build_adjacency_matrix(JSON.stringify(notePaths), JSON.stringify(links));
+		// Build matrix using Rust/WASM (adjacency or Laplacian based on config)
+		if (!isAdjacencySourceConfig(config.config)) {
+			throw new Error("Invalid config for AdjacencyMatrixProvider");
+		}
+		const isLaplacian = config.config.graphType === "laplacian";
+		const vectorsJson: string = isLaplacian
+			? build_laplacian_matrix(JSON.stringify(notePaths), JSON.stringify(links))
+			: build_adjacency_matrix(JSON.stringify(notePaths), JSON.stringify(links));
 		const vectors = JSON.parse(vectorsJson) as number[][];
 
 		// Convert to VectorDataPoint format

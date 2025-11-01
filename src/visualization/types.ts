@@ -18,7 +18,7 @@ export interface EmbeddingSourceConfig {
 }
 
 export interface AdjacencySourceConfig {
-	graphType: "forward-links" | "backlinks" | "bidirectional";
+	graphType: "forward-links" | "backlinks" | "bidirectional" | "laplacian";
 	normalize: boolean;
 }
 

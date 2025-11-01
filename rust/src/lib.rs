@@ -83,6 +83,36 @@ pub fn build_adjacency_matrix(note_paths_json: &str, links_json: &str) -> Result
         .map_err(|e| JsValue::from_str(&format!("Failed to serialize: {e}")))
 }
 
+/// Build graph Laplacian matrix from note links.
+///
+/// # Arguments
+/// * `note_paths_json` - JSON array of note paths
+/// * `links_json` - JSON array of links (objects with from_id and to_id)
+///
+/// # Returns
+/// JSON string of vectors (Laplacian matrix rows)
+///
+/// # Errors
+/// Returns error if parsing fails or link indices are invalid
+#[wasm_bindgen]
+pub fn build_laplacian_matrix(note_paths_json: &str, links_json: &str) -> Result<String, JsValue> {
+    let note_paths: Vec<String> = serde_json::from_str(note_paths_json)
+        .map_err(|e| JsValue::from_str(&format!("Failed to parse note paths: {e}")))?;
+
+    let links: Vec<NoteLink> = serde_json::from_str(links_json)
+        .map_err(|e| JsValue::from_str(&format!("Failed to parse links: {e}")))?;
+
+    let builder = AdjacencyMatrixBuilder::new(note_paths);
+    let matrix = builder
+        .build_laplacian(links)
+        .map_err(|e| JsValue::from_str(&format!("Failed to build Laplacian: {e}")))?;
+
+    let vectors = builder.matrix_to_vectors(&matrix);
+
+    serde_json::to_string(&vectors)
+        .map_err(|e| JsValue::from_str(&format!("Failed to serialize: {e}")))
+}
+
 /// Reduce dimensionality using SVD.
 ///
 /// # Arguments

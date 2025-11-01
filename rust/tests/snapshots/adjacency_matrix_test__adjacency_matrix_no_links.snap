@@ -1,0 +1,21 @@
+---
+source: tests/adjacency_matrix_test.rs
+expression: snapshot
+---
+[
+  [
+    0.0,
+    0.0,
+    0.0
+  ],
+  [
+    0.0,
+    0.0,
+    0.0
+  ],
+  [
+    0.0,
+    0.0,
+    0.0
+  ]
+]

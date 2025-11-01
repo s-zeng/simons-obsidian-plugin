@@ -179,9 +179,23 @@ export class VectorDataManager {
 			sources.push(...embeddingSources);
 		}
 
-		// Add adjacency matrix source
+		// Add graph-based sources (Laplacian first as default)
 		const files = this.plugin.app.vault.getMarkdownFiles();
-		console.log("[VectorDataManager] Found", files.length, "markdown files for adjacency matrix");
+		console.log("[VectorDataManager] Found", files.length, "markdown files for graph matrices");
+
+		// Laplacian matrix (default)
+		sources.push({
+			type: VectorSourceTypeEnum.ADJACENCY_MATRIX,
+			id: "laplacian",
+			name: "Graph Laplacian",
+			dimensionality: files.length,
+			config: {
+				graphType: "laplacian",
+				normalize: true,
+			},
+		});
+
+		// Adjacency matrix (alternative)
 		sources.push({
 			type: VectorSourceTypeEnum.ADJACENCY_MATRIX,
 			id: "forward-links",

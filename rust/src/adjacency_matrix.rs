@@ -126,6 +126,42 @@ impl AdjacencyMatrixBuilder {
     pub fn get_note_index(&self, path: &str) -> Option<usize> {
         self.note_id_map.get(path).copied()
     }
+
+    /// Build the graph Laplacian matrix from a list of links.
+    ///
+    /// The Laplacian matrix L = D - A, where:
+    /// - D is the degree matrix (diagonal, D[i][i] = out-degree of node i)
+    /// - A is the adjacency matrix
+    ///
+    /// # Arguments
+    /// * `links` - List of note links
+    ///
+    /// # Returns
+    /// Sparse Laplacian matrix in CSR format
+    ///
+    /// # Errors
+    /// Returns error if link indices are out of bounds
+    pub fn build_laplacian(&self, links: Vec<NoteLink>) -> Result<CsMat<f64>, PluginError> {
+        // First build the adjacency matrix
+        let adjacency = self.build(links)?;
+
+        // Compute degree matrix (diagonal with out-degrees)
+        let mut degree_triplets = TriMat::new((self.num_notes, self.num_notes));
+        for i in 0..self.num_notes {
+            let row_sum: f64 = adjacency
+                .outer_view(i)
+                .map_or(0.0, |row| row.iter().map(|(_, &val)| val).sum());
+            if row_sum > 0.0 {
+                degree_triplets.add_triplet(i, i, row_sum);
+            }
+        }
+        let degree = degree_triplets.to_csr();
+
+        // Compute L = D - A
+        let laplacian = &degree - &adjacency;
+
+        Ok(laplacian)
+    }
 }
 
 #[cfg(test)]
@@ -199,5 +235,71 @@ mod tests {
             },
             _ => panic!("Expected InvalidLinkIndex error"),
         }
+    }
+
+    #[test]
+    fn test_laplacian_simple() {
+        let note_paths =
+            vec!["note1.md".to_string(), "note2.md".to_string(), "note3.md".to_string()];
+
+        let links = vec![
+            NoteLink { from_id: 0, to_id: 1 },
+            NoteLink { from_id: 0, to_id: 2 },
+            NoteLink { from_id: 1, to_id: 2 },
+        ];
+
+        let builder = AdjacencyMatrixBuilder::new(note_paths);
+        let matrix = builder
+            .build_laplacian(links)
+            .expect("Failed to build Laplacian");
+        let vectors = builder.matrix_to_vectors(&matrix);
+
+        // Verify Laplacian properties
+        // For a directed graph: L[i][i] = out-degree(i), L[i][j] = -A[i][j]
+        // node1: out-degree=2, links to node2 and node3
+        // node2: out-degree=1, links to node3
+        // node3: out-degree=0, no outgoing links
+        assert_eq!(vectors[0], vec![2.0, -1.0, -1.0]); // L[0] = [2, -1, -1]
+        assert_eq!(vectors[1], vec![0.0, 1.0, -1.0]); // L[1] = [0, 1, -1]
+        assert_eq!(vectors[2], vec![0.0, 0.0, 0.0]); // L[2] = [0, 0, 0]
+    }
+
+    #[test]
+    fn test_laplacian_isolated_node() {
+        let note_paths = vec!["note1.md".to_string(), "note2.md".to_string()];
+
+        let links = vec![]; // No links, all nodes isolated
+
+        let builder = AdjacencyMatrixBuilder::new(note_paths);
+        let matrix = builder
+            .build_laplacian(links)
+            .expect("Failed to build Laplacian");
+        let vectors = builder.matrix_to_vectors(&matrix);
+
+        // Isolated nodes should have all zeros
+        assert_eq!(vectors[0], vec![0.0, 0.0]);
+        assert_eq!(vectors[1], vec![0.0, 0.0]);
+    }
+
+    #[test]
+    fn test_laplacian_self_loop() {
+        let note_paths = vec!["note1.md".to_string(), "note2.md".to_string()];
+
+        let links = vec![
+            NoteLink { from_id: 0, to_id: 0 }, // Self-loop
+            NoteLink { from_id: 0, to_id: 1 },
+        ];
+
+        let builder = AdjacencyMatrixBuilder::new(note_paths);
+        let matrix = builder
+            .build_laplacian(links)
+            .expect("Failed to build Laplacian");
+        let vectors = builder.matrix_to_vectors(&matrix);
+
+        // node1 has out-degree=2 (including self-loop)
+        // L[0][0] = 2, L[0][0] -= A[0][0] = 2 - 1 = 1
+        // L[0][1] = -A[0][1] = -1
+        assert_eq!(vectors[0], vec![1.0, -1.0]);
+        assert_eq!(vectors[1], vec![0.0, 0.0]);
     }
 }

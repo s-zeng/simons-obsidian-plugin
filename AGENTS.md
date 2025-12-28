@@ -36,6 +36,11 @@ features or structures
 
 All code changes must pass the pre-commit hook of `bun run lint`. After any change, please ensure `bun run lint` still passes.
 
+## Linting
+
+- TypeScript uses the strictest compiler settings (including exact optional property checks and unknown catch variables).
+- Rust enables expanded `rustc` warnings and additional Clippy restriction lints (e.g., `dbg_macro`, `print_stdout`, `panic_in_result_fn`).
+
 ## 3D Vector Visualization Architecture
 
 The plugin includes a comprehensive 3D vector visualization system that supports multiple vector sources:

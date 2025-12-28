@@ -9,7 +9,7 @@ use sprs::{CsMat, TriMat};
 use std::collections::HashMap;
 
 /// Represents a link between two notes in the vault.
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
 pub struct NoteLink {
     /// Source note index.
     #[serde(rename = "fromId")]
@@ -23,6 +23,7 @@ pub struct NoteLink {
 ///
 /// The matrix M[i][j] represents the number of forward links from note i to note j.
 /// Uses sparse matrix representation for efficiency with large vaults.
+#[derive(Debug)]
 pub struct AdjacencyMatrixBuilder {
     /// Total number of notes.
     num_notes: usize,

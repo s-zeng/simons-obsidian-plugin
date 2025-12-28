@@ -26,6 +26,8 @@
 		"noImplicitReturns": true, // Error when not all code paths return a value
 		"noFallthroughCasesInSwitch": true, // Error on fallthrough cases in switch statements
 		"noUncheckedIndexedAccess": true, // Add undefined to index signature results
+		"exactOptionalPropertyTypes": true, // Distinguish optional properties from undefined
+		"useUnknownInCatchVariables": true, // Catch variables are unknown by default
 		"noImplicitOverride": true, // Ensure overriding members are marked with override
 		"noPropertyAccessFromIndexSignature": true, // Require indexed access for keys declared with indexed type
 		"allowUnusedLabels": false, // Error on unused labels
@@ -34,7 +36,8 @@
 		// Import/Module resolution
 		"forceConsistentCasingInFileNames": true, // Disallow inconsistently-cased references
 		"esModuleInterop": true, // Emit additional JS for easier CommonJS/ES6 interop
-		"skipLibCheck": true // Skip type checking of declaration files
+		"checkJs": true, // Type-check JS files when allowJs is enabled
+		"skipLibCheck": false // Type-check declaration files for maximum coverage
 	},
 	"include": ["**/*.ts", "pkg/**/*.d.ts", "wasm.d.ts"]
 }

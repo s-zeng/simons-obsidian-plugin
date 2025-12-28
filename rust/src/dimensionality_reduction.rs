@@ -33,6 +33,7 @@ pub trait DimensionalityReducer {
 ///
 /// Uses Singular Value Decomposition to project high-dimensional data
 /// onto lower-dimensional subspaces that preserve maximum variance.
+#[derive(Debug, Clone, Copy)]
 pub struct SVDReducer {
     /// Whether to center data (subtract mean).
     center: bool,

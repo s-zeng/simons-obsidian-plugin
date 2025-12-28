@@ -98,16 +98,20 @@ export class EmbeddingSourceProvider implements VectorSourceProvider {
 		const data = (await response.json()) as QdrantScrollResponse;
 		const points = data.result?.points || [];
 
-		return points.map((point) => ({
-			id: point.id,
-			label: point.payload?.title || point.id,
-			vector: point.vector,
-			position3d: [0, 0, 0], // Will be computed later
-			cluster: 0, // Will be assigned later
-			sourceId: config.id,
-			sourceName: config.name,
-			sourceType: config.type,
-			metadata: point.payload,
-		}));
+		return points.map((point) => {
+			const position3d: [number, number, number] = [0, 0, 0];
+			const basePoint = {
+				id: point.id,
+				label: point.payload?.title || point.id,
+				vector: point.vector,
+				position3d, // Will be computed later
+				cluster: 0, // Will be assigned later
+				sourceId: config.id,
+				sourceName: config.name,
+				sourceType: config.type,
+			};
+
+			return point.payload ? { ...basePoint, metadata: point.payload } : basePoint;
+		});
 	}
 }

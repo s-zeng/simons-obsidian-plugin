@@ -8,10 +8,10 @@
 		"dev": "bun run build:wasm && node esbuild.config.mjs",
 		"build": "bun run build:wasm && tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
 		"version": "node version-bump.mjs && git add manifest.json versions.json",
-		"lint": "npm run lint:ts && npm run lint:rust",
+		"lint": "bun run lint:ts && bun run lint:rust",
 		"lint:ts": "eslint . --ext .ts && prettier --check '**/*.{ts,js,json,md}' && tsc --noEmit",
 		"lint:rust": "cd rust && cargo fmt --check && cargo clippy -- -D warnings",
-		"format": "npm run format:ts && npm run format:rust",
+		"format": "bun run format:ts && bun run format:rust",
 		"format:ts": "prettier --write '**/*.{ts,js,json,md}' && eslint . --ext .ts --fix",
 		"format:rust": "cd rust && cargo fmt",
 		"prepare": "husky"

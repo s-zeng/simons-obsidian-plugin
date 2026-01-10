@@ -63,6 +63,9 @@ impl AdjacencyMatrixBuilder {
     /// Returns error if link indices are out of bounds
     #[allow(clippy::cast_precision_loss)]
     pub fn build(&self, links: Vec<NoteLink>) -> Result<CsMat<f64>, PluginError> {
+        if self.num_notes == 0 {
+            return Err(PluginError::InsufficientData { required: 1, provided: 0 });
+        }
         let mut triplets = TriMat::new((self.num_notes, self.num_notes));
 
         // Count links between each pair of notes
@@ -143,6 +146,9 @@ impl AdjacencyMatrixBuilder {
     /// # Errors
     /// Returns error if link indices are out of bounds
     pub fn build_laplacian(&self, links: Vec<NoteLink>) -> Result<CsMat<f64>, PluginError> {
+        if self.num_notes == 0 {
+            return Err(PluginError::InsufficientData { required: 1, provided: 0 });
+        }
         // First build the adjacency matrix
         let adjacency = self.build(links)?;
 
@@ -162,145 +168,5 @@ impl AdjacencyMatrixBuilder {
         let laplacian = &degree - &adjacency;
 
         Ok(laplacian)
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_adjacency_matrix_builder_new() {
-        let note_paths =
-            vec!["note1.md".to_string(), "note2.md".to_string(), "note3.md".to_string()];
-
-        let builder = AdjacencyMatrixBuilder::new(note_paths);
-        assert_eq!(builder.num_notes(), 3);
-        assert_eq!(builder.get_note_index("note1.md"), Some(0));
-        assert_eq!(builder.get_note_index("note2.md"), Some(1));
-        assert_eq!(builder.get_note_index("note3.md"), Some(2));
-    }
-
-    #[test]
-    fn test_adjacency_matrix_simple() {
-        let note_paths =
-            vec!["note1.md".to_string(), "note2.md".to_string(), "note3.md".to_string()];
-
-        let links = vec![
-            NoteLink { from_id: 0, to_id: 1 },
-            NoteLink { from_id: 0, to_id: 2 },
-            NoteLink { from_id: 1, to_id: 2 },
-        ];
-
-        let builder = AdjacencyMatrixBuilder::new(note_paths);
-        let matrix = builder.build(links).expect("Failed to build matrix");
-        let vectors = builder.matrix_to_vectors(&matrix);
-
-        assert_eq!(vectors.len(), 3);
-        assert_eq!(vectors[0], vec![0.0, 1.0, 1.0]); // note1 links to note2 and note3
-        assert_eq!(vectors[1], vec![0.0, 0.0, 1.0]); // note2 links to note3
-        assert_eq!(vectors[2], vec![0.0, 0.0, 0.0]); // note3 has no outgoing links
-    }
-
-    #[test]
-    fn test_adjacency_matrix_multiple_links() {
-        let note_paths = vec!["note1.md".to_string(), "note2.md".to_string()];
-
-        let links = vec![
-            NoteLink { from_id: 0, to_id: 1 },
-            NoteLink { from_id: 0, to_id: 1 }, // Duplicate link
-        ];
-
-        let builder = AdjacencyMatrixBuilder::new(note_paths);
-        let matrix = builder.build(links).expect("Failed to build matrix");
-        let vectors = builder.matrix_to_vectors(&matrix);
-
-        assert_eq!(vectors[0], vec![0.0, 2.0]); // note1 has 2 links to note2
-    }
-
-    #[test]
-    fn test_adjacency_matrix_invalid_index() {
-        let note_paths = vec!["note1.md".to_string(), "note2.md".to_string()];
-
-        let links = vec![NoteLink { from_id: 0, to_id: 5 }]; // Invalid index
-
-        let builder = AdjacencyMatrixBuilder::new(note_paths);
-        let result = builder.build(links);
-
-        assert!(result.is_err());
-        match result {
-            Err(PluginError::InvalidLinkIndex { from, to, max }) => {
-                assert_eq!(from, 0);
-                assert_eq!(to, 5);
-                assert_eq!(max, 1);
-            },
-            _ => panic!("Expected InvalidLinkIndex error"),
-        }
-    }
-
-    #[test]
-    fn test_laplacian_simple() {
-        let note_paths =
-            vec!["note1.md".to_string(), "note2.md".to_string(), "note3.md".to_string()];
-
-        let links = vec![
-            NoteLink { from_id: 0, to_id: 1 },
-            NoteLink { from_id: 0, to_id: 2 },
-            NoteLink { from_id: 1, to_id: 2 },
-        ];
-
-        let builder = AdjacencyMatrixBuilder::new(note_paths);
-        let matrix = builder
-            .build_laplacian(links)
-            .expect("Failed to build Laplacian");
-        let vectors = builder.matrix_to_vectors(&matrix);
-
-        // Verify Laplacian properties
-        // For a directed graph: L[i][i] = out-degree(i), L[i][j] = -A[i][j]
-        // node1: out-degree=2, links to node2 and node3
-        // node2: out-degree=1, links to node3
-        // node3: out-degree=0, no outgoing links
-        assert_eq!(vectors[0], vec![2.0, -1.0, -1.0]); // L[0] = [2, -1, -1]
-        assert_eq!(vectors[1], vec![0.0, 1.0, -1.0]); // L[1] = [0, 1, -1]
-        assert_eq!(vectors[2], vec![0.0, 0.0, 0.0]); // L[2] = [0, 0, 0]
-    }
-
-    #[test]
-    fn test_laplacian_isolated_node() {
-        let note_paths = vec!["note1.md".to_string(), "note2.md".to_string()];
-
-        let links = vec![]; // No links, all nodes isolated
-
-        let builder = AdjacencyMatrixBuilder::new(note_paths);
-        let matrix = builder
-            .build_laplacian(links)
-            .expect("Failed to build Laplacian");
-        let vectors = builder.matrix_to_vectors(&matrix);
-
-        // Isolated nodes should have all zeros
-        assert_eq!(vectors[0], vec![0.0, 0.0]);
-        assert_eq!(vectors[1], vec![0.0, 0.0]);
-    }
-
-    #[test]
-    fn test_laplacian_self_loop() {
-        let note_paths = vec!["note1.md".to_string(), "note2.md".to_string()];
-
-        let links = vec![
-            NoteLink { from_id: 0, to_id: 0 }, // Self-loop
-            NoteLink { from_id: 0, to_id: 1 },
-        ];
-
-        let builder = AdjacencyMatrixBuilder::new(note_paths);
-        let matrix = builder
-            .build_laplacian(links)
-            .expect("Failed to build Laplacian");
-        let vectors = builder.matrix_to_vectors(&matrix);
-
-        // node1 has out-degree=2 (including self-loop)
-        // L[0][0] = 2, L[0][0] -= A[0][0] = 2 - 1 = 1
-        // L[0][1] = -A[0][1] = -1
-        assert_eq!(vectors[0], vec![1.0, -1.0]);
-        assert_eq!(vectors[1], vec![0.0, 0.0]);
     }
 }

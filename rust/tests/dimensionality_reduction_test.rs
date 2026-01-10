@@ -25,7 +25,7 @@ fn test_svd_reduction_preserves_count() {
     let reducer = SVDReducer::new();
     let result = reducer.reduce(&vectors, 2).expect("SVD reduction failed");
 
-    assert_eq!(result.len(), 2);
-    assert_eq!(result[0].len(), 2);
-    assert_eq!(result[1].len(), 2);
+    let cols = result.first().map_or(0, std::vec::Vec::len);
+    let snapshot = format!("rows={} cols={}", result.len(), cols);
+    insta::assert_snapshot!(snapshot, @"rows=2 cols=2");
 }

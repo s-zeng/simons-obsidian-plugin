@@ -29,6 +29,8 @@ export class VectorVisualizationView extends ItemView {
 	private currentSource: VectorSourceConfig | null = null;
 	private availableSources: VectorSourceConfig[] = [];
 	private pointCloud: THREE.Points | null = null;
+	private animationFrameId: number | null = null;
+	private isAnimationActive = false;
 
 	constructor(leaf: WorkspaceLeaf, _plugin: HelloWorldPlugin) {
 		super(leaf);
@@ -76,7 +78,10 @@ export class VectorVisualizationView extends ItemView {
 			// Initialize Three.js scene
 			console.log("[VectorVisualizationView] Initializing Three.js scene...");
 			this.updateStatus("Initializing 3D scene...");
-			this.initializeScene(this.canvasContainer);
+			const initialized = this.initializeScene(this.canvasContainer);
+			if (!initialized) {
+				return;
+			}
 			this.setupControls();
 			this.setupEventListeners();
 
@@ -192,7 +197,7 @@ export class VectorVisualizationView extends ItemView {
 		}
 	}
 
-	private initializeScene(container: HTMLElement): void {
+	private initializeScene(container: HTMLElement): boolean {
 		const width = container.clientWidth;
 		const height = container.clientHeight;
 
@@ -212,7 +217,7 @@ export class VectorVisualizationView extends ItemView {
 				height
 			);
 			this.updateStatus("Error: Canvas container has zero size", true);
-			return;
+			return false;
 		}
 
 		// Three.js scene setup
@@ -240,7 +245,7 @@ export class VectorVisualizationView extends ItemView {
 		if (this.renderer.domElement.width === 0 || this.renderer.domElement.height === 0) {
 			console.error("[VectorVisualizationView] Canvas created with zero size!");
 			this.updateStatus("Error: Canvas has zero size", true);
-			return;
+			return false;
 		}
 
 		// Lighting
@@ -248,18 +253,8 @@ export class VectorVisualizationView extends ItemView {
 		this.scene.add(ambientLight);
 		console.log("[VectorVisualizationView] Lighting added");
 
-		// Animation loop
-		const animate = (): void => {
-			requestAnimationFrame(animate);
-			if (this.controls) {
-				this.controls.update();
-			}
-			if (this.renderer && this.scene && this.camera) {
-				this.renderer.render(this.scene, this.camera);
-			}
-		};
-		animate();
-		console.log("[VectorVisualizationView] Animation loop started");
+		this.startAnimationLoop();
+		return true;
 	}
 
 	private setupControls(): void {
@@ -369,6 +364,10 @@ export class VectorVisualizationView extends ItemView {
 
 	private exportAsImage(): void {
 		// Export canvas as PNG
+		if (!this.renderer) {
+			this.updateStatus("Error: Renderer not initialized", true);
+			return;
+		}
 		const dataURL = this.renderer.domElement.toDataURL("image/png");
 		const link = document.createElement("a");
 		link.download = "vector-visualization.png";
@@ -399,13 +398,46 @@ export class VectorVisualizationView extends ItemView {
 
 	override onClose(): Promise<void> {
 		// Cleanup Three.js resources
+		this.stopAnimationLoop();
 		if (this.renderer) {
 			this.renderer.dispose();
+		}
+		if (this.controls) {
+			this.controls.dispose();
 		}
 		if (this.pointCloud) {
 			this.pointCloud.geometry.dispose();
 			(this.pointCloud.material as THREE.Material).dispose();
 		}
 		return Promise.resolve();
+	}
+
+	private startAnimationLoop(): void {
+		if (this.isAnimationActive) {
+			return;
+		}
+		this.isAnimationActive = true;
+		const animate = (): void => {
+			if (!this.isAnimationActive) {
+				return;
+			}
+			this.animationFrameId = requestAnimationFrame(animate);
+			if (this.controls) {
+				this.controls.update();
+			}
+			if (this.renderer && this.scene && this.camera) {
+				this.renderer.render(this.scene, this.camera);
+			}
+		};
+		this.animationFrameId = requestAnimationFrame(animate);
+		console.log("[VectorVisualizationView] Animation loop started");
+	}
+
+	private stopAnimationLoop(): void {
+		this.isAnimationActive = false;
+		if (this.animationFrameId !== null) {
+			cancelAnimationFrame(this.animationFrameId);
+			this.animationFrameId = null;
+		}
 	}
 }

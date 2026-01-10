@@ -13,7 +13,23 @@ fn test_normalize_vectors_snapshot() {
         .collect();
 
     let snapshot = serde_json::to_string_pretty(&formatted).expect("Failed to serialize");
-    insta::assert_snapshot!(snapshot);
+    insta::assert_snapshot!(
+        snapshot,
+        @r#"[
+  [
+    "0.6000000000",
+    "0.8000000000"
+  ],
+  [
+    "1.0000000000",
+    "0.0000000000"
+  ],
+  [
+    "0.3846153846",
+    "0.9230769231"
+  ]
+]"#
+    );
 }
 
 #[test]
@@ -31,5 +47,16 @@ fn test_kmeans_clustering_deterministic() {
     let assignments = simple_kmeans_clustering(&vectors, 2).expect("Clustering failed");
 
     let snapshot = serde_json::to_string_pretty(&assignments).expect("Failed to serialize");
-    insta::assert_snapshot!(snapshot);
+    insta::assert_snapshot!(
+        snapshot,
+        @r#"[
+  0,
+  0,
+  1,
+  1,
+  1,
+  1,
+  1
+]"#
+    );
 }

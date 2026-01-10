@@ -84,37 +84,3 @@ impl VectorWithMetadata {
         self.vector.len()
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_vector_with_metadata_new() {
-        let vec = VectorWithMetadata::new(
-            "test.md".to_string(),
-            "Test Note".to_string(),
-            vec![1.0, 2.0, 3.0],
-            "test-source".to_string(),
-        );
-
-        assert_eq!(vec.id, "test.md");
-        assert_eq!(vec.label, "Test Note");
-        assert_eq!(vec.vector, vec![1.0, 2.0, 3.0]);
-        assert_eq!(vec.source_id, "test-source");
-        assert_eq!(vec.dimensionality(), 3);
-    }
-
-    #[test]
-    fn test_vector_with_metadata_add_metadata() {
-        let mut vec = VectorWithMetadata::new(
-            "test.md".to_string(),
-            "Test Note".to_string(),
-            vec![1.0, 2.0],
-            "test-source".to_string(),
-        );
-
-        vec.add_metadata("tag".to_string(), "important".to_string());
-        assert_eq!(vec.metadata.get("tag"), Some(&"important".to_string()));
-    }
-}

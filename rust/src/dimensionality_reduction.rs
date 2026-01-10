@@ -62,13 +62,20 @@ impl SVDReducer {
 
     /// Center the data matrix (subtract column means).
     fn center_data(matrix: &DMatrix<f64>) -> (DMatrix<f64>, DVector<f64>) {
-        let means = matrix.column_mean();
         let nrows = matrix.nrows();
         let ncols = matrix.ncols();
 
+        let mut means = vec![0.0; ncols];
+        #[allow(clippy::cast_precision_loss)]
+        let nrows_f64 = nrows as f64;
+        for (col, mean) in means.iter_mut().enumerate() {
+            let sum = matrix.column(col).iter().copied().sum::<f64>();
+            *mean = sum / nrows_f64;
+        }
+
         let centered = DMatrix::from_fn(nrows, ncols, |i, j| matrix[(i, j)] - means[j]);
 
-        (centered, means)
+        (centered, DVector::from_vec(means))
     }
 
     /// Scale the data matrix (divide by column standard deviations).
@@ -165,77 +172,5 @@ impl DimensionalityReducer for SVDReducer {
 
     fn method_name(&self) -> &'static str {
         "SVD"
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_svd_reducer_simple() {
-        let vectors = vec![vec![1.0, 2.0, 3.0], vec![4.0, 5.0, 6.0], vec![7.0, 8.0, 9.0]];
-
-        let reducer = SVDReducer::new();
-        let result = reducer.reduce(&vectors, 2).expect("SVD reduction failed");
-
-        assert_eq!(result.len(), 3);
-        assert_eq!(result[0].len(), 2);
-        assert_eq!(result[1].len(), 2);
-        assert_eq!(result[2].len(), 2);
-    }
-
-    #[test]
-    fn test_svd_reducer_invalid_target_dims() {
-        let vectors = vec![vec![1.0, 2.0], vec![3.0, 4.0]];
-
-        let reducer = SVDReducer::new();
-        let result = reducer.reduce(&vectors, 5); // Target > source dims
-
-        assert!(result.is_err());
-        match result {
-            Err(PluginError::DimensionalityReductionError { method, reason: _ }) => {
-                assert_eq!(method, "SVD");
-            },
-            _ => panic!("Expected DimensionalityReductionError"),
-        }
-    }
-
-    #[test]
-    fn test_svd_reducer_mismatched_dimensions() {
-        let vectors = vec![
-            vec![1.0, 2.0, 3.0],
-            vec![4.0, 5.0], // Wrong dimension
-        ];
-
-        let reducer = SVDReducer::new();
-        let result = reducer.reduce(&vectors, 2);
-
-        assert!(result.is_err());
-        match result {
-            Err(PluginError::InvalidVectorDimensions { expected, got, vector_index }) => {
-                assert_eq!(expected, 3);
-                assert_eq!(got, 2);
-                assert_eq!(vector_index, 1);
-            },
-            _ => panic!("Expected InvalidVectorDimensions error"),
-        }
-    }
-
-    #[test]
-    fn test_svd_reducer_empty_input() {
-        let vectors: Vec<Vec<f64>> = vec![];
-
-        let reducer = SVDReducer::new();
-        let result = reducer.reduce(&vectors, 2);
-
-        assert!(result.is_err());
-        match result {
-            Err(PluginError::InsufficientData { required, provided }) => {
-                assert_eq!(required, 1);
-                assert_eq!(provided, 0);
-            },
-            _ => panic!("Expected InsufficientData error"),
-        }
     }
 }

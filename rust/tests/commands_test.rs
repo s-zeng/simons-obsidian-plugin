@@ -40,23 +40,80 @@ fn test_generate_greeting_empty_name() {
 
 #[test]
 fn test_calculate_fibonacci_base_cases() {
-    insta::assert_snapshot!(calculate_fibonacci(0), @"0");
-    insta::assert_snapshot!(calculate_fibonacci(1), @"1");
+    let results = vec![(0, calculate_fibonacci(0)), (1, calculate_fibonacci(1))];
+    let snapshot = serde_json::to_string_pretty(&results).expect("Failed to serialize");
+    insta::assert_snapshot!(
+        snapshot,
+        @r#"[
+  [
+    0,
+    0
+  ],
+  [
+    1,
+    1
+  ]
+]"#
+    );
 }
 
 #[test]
 fn test_calculate_fibonacci_small_values() {
-    insta::assert_snapshot!(calculate_fibonacci(2), @"1");
-    insta::assert_snapshot!(calculate_fibonacci(3), @"2");
-    insta::assert_snapshot!(calculate_fibonacci(4), @"3");
-    insta::assert_snapshot!(calculate_fibonacci(5), @"5");
+    let results = vec![
+        (2, calculate_fibonacci(2)),
+        (3, calculate_fibonacci(3)),
+        (4, calculate_fibonacci(4)),
+        (5, calculate_fibonacci(5)),
+    ];
+    let snapshot = serde_json::to_string_pretty(&results).expect("Failed to serialize");
+    insta::assert_snapshot!(
+        snapshot,
+        @r#"[
+  [
+    2,
+    1
+  ],
+  [
+    3,
+    2
+  ],
+  [
+    4,
+    3
+  ],
+  [
+    5,
+    5
+  ]
+]"#
+    );
 }
 
 #[test]
 fn test_calculate_fibonacci_medium_values() {
-    insta::assert_snapshot!(calculate_fibonacci(10), @"55");
-    insta::assert_snapshot!(calculate_fibonacci(15), @"610");
-    insta::assert_snapshot!(calculate_fibonacci(20), @"6765");
+    let results = vec![
+        (10, calculate_fibonacci(10)),
+        (15, calculate_fibonacci(15)),
+        (20, calculate_fibonacci(20)),
+    ];
+    let snapshot = serde_json::to_string_pretty(&results).expect("Failed to serialize");
+    insta::assert_snapshot!(
+        snapshot,
+        @r#"[
+  [
+    10,
+    55
+  ],
+  [
+    15,
+    610
+  ],
+  [
+    20,
+    6765
+  ]
+]"#
+    );
 }
 
 #[test]

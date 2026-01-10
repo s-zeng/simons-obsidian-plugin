@@ -20,48 +20,48 @@ fn test_deserialize_valid_settings() {
 #[test]
 fn test_deserialize_invalid_json() {
     let json = r"invalid json";
-    let result = deserialize_settings(json);
-    assert!(result.is_err());
-
-    if let Err(PluginError::SerializationError { context, source }) = result {
-        insta::assert_snapshot!(context, @"deserialize_settings");
-        // Source error message contains specific parse error - just verify it exists
-        assert!(!source.is_empty());
-    } else {
-        panic!("Expected SerializationError");
-    }
+    let snapshot = match deserialize_settings(json) {
+        Ok(_) => "ok".to_string(),
+        Err(PluginError::SerializationError { context, source }) => {
+            format!("context={context} source_nonempty={}", !source.is_empty())
+        },
+        Err(err) => format!("unexpected={err}"),
+    };
+    insta::assert_snapshot!(snapshot, @"context=deserialize_settings source_nonempty=true");
 }
 
 #[test]
 fn test_validate_setting_my_setting_valid() {
-    let result = validate_setting_internal("mySetting", "some_value");
-    assert!(result.is_ok());
+    let snapshot = match validate_setting_internal("mySetting", "some_value") {
+        Ok(()) => "ok".to_string(),
+        Err(err) => format!("error={err}"),
+    };
+    insta::assert_snapshot!(snapshot, @"ok");
 }
 
 #[test]
 fn test_validate_setting_my_setting_empty() {
-    let result = validate_setting_internal("mySetting", "");
-    assert!(result.is_err());
-
-    if let Err(PluginError::ValidationError { field, value, reason }) = result {
-        insta::assert_snapshot!(field, @"mySetting");
-        insta::assert_snapshot!(value, @"");
-        insta::assert_snapshot!(reason, @"Setting value cannot be empty");
-    } else {
-        panic!("Expected ValidationError");
-    }
+    let snapshot = match validate_setting_internal("mySetting", "") {
+        Ok(()) => "ok".to_string(),
+        Err(PluginError::ValidationError { field, value, reason }) => {
+            format!("field={field} value={value} reason={reason}")
+        },
+        Err(err) => format!("unexpected={err}"),
+    };
+    insta::assert_snapshot!(
+        snapshot,
+        @"field=mySetting value= reason=Setting value cannot be empty"
+    );
 }
 
 #[test]
 fn test_validate_setting_unknown_key() {
-    let result = validate_setting_internal("unknownKey", "value");
-    assert!(result.is_err());
-
-    if let Err(PluginError::UnknownSetting { key }) = result {
-        insta::assert_snapshot!(key, @"unknownKey");
-    } else {
-        panic!("Expected UnknownSetting error");
-    }
+    let snapshot = match validate_setting_internal("unknownKey", "value") {
+        Ok(()) => "ok".to_string(),
+        Err(PluginError::UnknownSetting { key }) => format!("unknown_key={key}"),
+        Err(err) => format!("unexpected={err}"),
+    };
+    insta::assert_snapshot!(snapshot, @"unknown_key=unknownKey");
 }
 
 #[test]

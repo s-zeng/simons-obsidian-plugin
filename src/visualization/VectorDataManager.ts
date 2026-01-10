@@ -76,8 +76,9 @@ export class VectorDataManager {
 			const reduced3d = this.computeReduction(vectors, "svd");
 			console.log("[VectorDataManager] Reduction complete, result count:", reduced3d.length);
 
-			// Compute clusters
-			const clusterCount = Math.min(10, Math.max(3, Math.floor(vectors.length / 50)));
+			// Compute clusters (clamp to available points)
+			const requestedClusters = Math.min(10, Math.max(1, Math.floor(vectors.length / 50)));
+			const clusterCount = Math.min(vectors.length, requestedClusters);
 			console.log("[VectorDataManager] Computing", clusterCount, "clusters...");
 			const clusters = this.computeClusters(vectors, clusterCount);
 			console.log("[VectorDataManager] Clustering complete");

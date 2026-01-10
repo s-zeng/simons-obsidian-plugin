@@ -1,0 +1,39 @@
+// Bun Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`color schemes sample palette snapshots 1`] = `
+[
+  {
+    "colors": [
+      "f69090",
+      "f6cb90",
+      "f6f690",
+      "cbf690",
+      "90f6cb",
+      "9090f6",
+    ],
+    "name": "Rainbow",
+  },
+  {
+    "colors": [
+      "f69090",
+      "90f6b6",
+      "d390f6",
+      "f6ec90",
+      "f690cf",
+      "f6bb90",
+    ],
+    "name": "Golden Angle",
+  },
+  {
+    "colors": [
+      "ff6b6b",
+      "4ecdc4",
+      "45b7d1",
+      "f7b731",
+      "00d2d3",
+      "ff6b6b",
+    ],
+    "name": "Categorical",
+  },
+]
+`;

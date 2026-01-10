@@ -13,4 +13,4 @@ jobs:
       - name: Install Nix
         uses: cachix/install-nix-action@v27
       - name: Install, lint, test
-        run: nix-shell --run "bash -lc \"bun install --frozen-lockfile && bun run lint && bun run test\""
+        run: nix-shell --run "bash -lc \"bun install --frozen-lockfile && bun run build && bun run lint && bun run test\""

@@ -24,3 +24,4 @@ data.json
 rust/target
 rust/result
 rust/result-lib
+.cache/

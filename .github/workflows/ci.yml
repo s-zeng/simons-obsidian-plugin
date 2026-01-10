@@ -13,8 +13,8 @@ jobs:
       - name: Install Nix
         uses: cachix/install-nix-action@v27
       - name: Bun install
-        run: nix develop --command bash -lc "bun install --frozen-lockfile"
+        run: nix-shell --run "bash -lc \"bun install --frozen-lockfile\""
       - name: Lint
-        run: nix develop --command bash -lc "bun run lint"
+        run: nix-shell --run "bash -lc \"bun run lint\""
       - name: Test
-        run: nix develop --command bash -lc "bun run test"
+        run: nix-shell --run "bash -lc \"bun run test\""

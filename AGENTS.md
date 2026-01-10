@@ -34,7 +34,7 @@ This project is in heavy development. Whenever you make a change, make sure to
 check `CLAUDE.md` and update it if necessary to reflect any newly added/changed
 features or structures
 
-All code changes must pass the pre-commit hook of `bun run lint`. After any change, please ensure `bun run lint` still passes.
+All code changes must pass the pre-commit hook of `bun run lint`. After any change, please ensure `bun run lint` still passes by running it yourself.
 
 ## Linting
 

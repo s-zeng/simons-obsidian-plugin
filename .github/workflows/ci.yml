@@ -1,0 +1,20 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  lint-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install Nix
+        uses: cachix/install-nix-action@v27
+      - name: Bun install
+        run: nix develop --command bash -lc "bun install --frozen-lockfile"
+      - name: Lint
+        run: nix develop --command bash -lc "bun run lint"
+      - name: Test
+        run: nix develop --command bash -lc "bun run test"

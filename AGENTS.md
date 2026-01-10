@@ -102,6 +102,10 @@ Based on comprehensive bug audits, follow these critical safety practices:
 
 This project uses Nix for reproducible builds and development environments.
 
+## CI
+
+GitHub Actions loads the Nix dev shell and runs `bun install`, `bun run lint`, and `bun run test`.
+
 ## Testing
 
 The project will use **snapshot testing** via the `insta` crate for all test assertions. This testing paradigm provides deterministic, maintainable tests that capture expected behavior through literal value snapshots.
